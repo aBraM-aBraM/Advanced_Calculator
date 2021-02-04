@@ -7,6 +7,7 @@ operators = ['(',')','&','$','@','!','%','^','/','*','+','-']
 #operators = ['[',']','+']
 
 error_code = -1
+END_VALUE = 'Q'
 
 def factorial(num, sum = 1):
 	if(num == 1):
@@ -49,23 +50,45 @@ def operate(equation, index, strength):
 					if operator == '!':
 						raise SyntaxError("Expected value before '!'")
 					count-=1				
-
+				
+				# duo operators can't start 
+				duo_operator = duo_operator and i
+				
 				if duo_operator:
 					nums_indices.append(i - len(digits[count]))
+					nums_indices.append(i + len(digits[count+1]) + 1)
 				else:
-					nums_indices.append(0)
-				nums_indices.append(i + len(digits[count+1]) + 1)
+					if operator  == '!':
+						nums_indices.append(0)
+						nums_indices.append(i + 1)
+					if operator == '-':
+						nums_indices.append(i - len(digits[count]))
+						nums_indices.append(0)
 				
+				print('opI ' + str(count))
+				print('I ' + str(i))
+				print('operator ' + operator)
+				print('duo? ' + str(duo_operator))
+				print(digits)
 
 				nums_indices.append(i)
 				if duo_operator:
 					values = [int(digits[count]), int(digits[count + 1])]
 				else:
-					values = [int(digits[count]), 0]
+					if operator == '!':
+						values = [int(digits[count]), 0]
+					if operator == '-':
+						values = [0, int(digits[count])]
 				if operator == '+':
 					result = values[0] + values[1]
 				if operator == '-':
-					result = values[0] - values[1]
+					print('operating minus')
+					
+					if i:
+						result = values[0] - values[1]
+					else:
+						duo_operator = False
+						result = -values[1]
 				if operator == '*':
 					result = values[0] * values[1]
 				if operator == '/':
@@ -87,9 +110,12 @@ def operate(equation, index, strength):
 		equation = equation[0:nums_indices[0]] + str(result) + equation[nums_indices[1]:len(equation)]
 	else:
 		if operator == '!':
-			equation = equation[0:nums_indices[2] - 1] + str(result) + equation[nums_indices[1] - 1:len(equation)]
+			equation = equation[0:nums_indices[2] - 1] + str(result) + equation[nums_indices[1]:len(equation)]
 		else:
-			equation = equation[0:nums_indices[2]] + str(result) + equation[nums_indices[1]:len(equation)]
+			equation += END_VALUE
+	print('res ' + str(result))
+	print(equation)
+	print('=======')
 	return equation
 
 def interpret(equation,strength=0, last_index = None):
@@ -101,22 +127,34 @@ def interpret(equation,strength=0, last_index = None):
 		if strength == len(operators):
 			return int(equation)
 		
+		if END_VALUE in equation:
+			return int(equation[:-1])
+			
+		
+		print('strength ' + str(strength))
 		# index of current operator in equation
 		index = equation.index(operators[strength])
+		
+		
 		# taking care of brackets
 		if(strength < 2):
 			# if opening bracket
 			if not strength:
 				# opening bracket search for first closing bracket
-				return interpret(equation, strength+1, index)
+				return interpret(equation, strength + 1, index)
 			# if closing bracket
 			if strength:
 				# closing bracket calculate brackets and start recursion again
+				print('outside strength ' + str(strength))
 				brackets_str = str(interpret(equation[last_index + 1: index]))
+				print('a')
 				equation = equation[0:last_index] + brackets_str + equation[index: len(equation) - 1]
+				print('done brackets')
+				print('t equation ' + equation)
 				return interpret(equation, 0, None)
 		# normal operation
 		else:
+			print('b operator is ' + str(operators[strength]))
 			equation = operate(equation,index,strength)
 			return interpret(equation, strength, last_index)
 	
@@ -139,4 +177,5 @@ def ui():
 		input("Press Enter to Continue")
 		os.system('cls')
 
+#15*7+64+4!*(22+31*-5)
 ui()
