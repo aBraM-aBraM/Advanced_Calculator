@@ -1,0 +1,142 @@
+import string
+import os
+
+error_str = ["operator can't be end of line","expected ')'"]
+
+operators = ['(',')','&','$','@','!','%','^','/','*','+','-']
+#operators = ['[',']','+']
+
+error_code = -1
+
+def factorial(num, sum = 1):
+	if(num == 1):
+		return sum
+	return factorial(num-1,sum*num)
+
+def operate(equation, index, strength):
+	# list of only numbers
+	tmp = equation[:]
+	digits = []
+	var = ''
+	for ch in tmp:
+		if ch == '-' and not var:
+			var += str(ch)
+		elif str(ch).isdigit():
+			var += str(ch)
+			
+		else:
+			if var:
+				digits.append(var)
+			var = ''
+	if var:
+		digits.append(var)
+	# result
+	operator = operators[strength]
+	duo_operator = True 
+	if operator == '!':
+		duo_operator = False
+	
+	result = 0
+	nums_indices = []
+	count = 0
+	# iterate over equation str
+	for i in range(len(equation)):
+		# if char on index is operator
+		if equation[i] in operators:
+			# if index is of our operator
+			if i == index:
+				if not duo_operator and i and equation[i-1] in operators:
+					if operator == '!':
+						raise SyntaxError("Expected value before '!'")
+					count-=1				
+
+				if duo_operator:
+					nums_indices.append(i - len(digits[count]))
+				else:
+					nums_indices.append(0)
+				nums_indices.append(i + len(digits[count+1]) + 1)
+				
+
+				nums_indices.append(i)
+				if duo_operator:
+					values = [int(digits[count]), int(digits[count + 1])]
+				else:
+					values = [int(digits[count]), 0]
+				if operator == '+':
+					result = values[0] + values[1]
+				if operator == '-':
+					result = values[0] - values[1]
+				if operator == '*':
+					result = values[0] * values[1]
+				if operator == '/':
+					result = values[0] / values[1]
+				if operator == '%':
+					result = values[0] % values[1]
+				if operator == '^':
+					result = values[0] ** values[1]
+				if operator == '$':
+					result = max(values[0], values[1])
+				if operator == '&':
+					result = min(values[0], values[1])
+				if operator == '@':
+					result = (values[0] + values[1])/2
+				if operator == '!':
+					result = factorial(values[0])
+			count += 1
+	if duo_operator:
+		equation = equation[0:nums_indices[0]] + str(result) + equation[nums_indices[1]:len(equation)]
+	else:
+		if operator == '!':
+			equation = equation[0:nums_indices[2] - 1] + str(result) + equation[nums_indices[1] - 1:len(equation)]
+		else:
+			equation = equation[0:nums_indices[2]] + str(result) + equation[nums_indices[1]:len(equation)]
+	return equation
+
+def interpret(equation,strength=0, last_index = None):
+	# remove white space
+	equation = equation.translate({ord(c): None for c in string.whitespace})
+
+	try:
+		# end of calculation
+		if strength == len(operators):
+			return int(equation)
+		
+		# index of current operator in equation
+		index = equation.index(operators[strength])
+		# taking care of brackets
+		if(strength < 2):
+			# if opening bracket
+			if not strength:
+				# opening bracket search for first closing bracket
+				return interpret(equation, strength+1, index)
+			# if closing bracket
+			if strength:
+				# closing bracket calculate brackets and start recursion again
+				brackets_str = str(interpret(equation[last_index + 1: index]))
+				equation = equation[0:last_index] + brackets_str + equation[index: len(equation) - 1]
+				return interpret(equation, 0, None)
+		# normal operation
+		else:
+			equation = operate(equation,index,strength)
+			return interpret(equation, strength, last_index)
+	
+	except ValueError:
+		# operator not found
+		if(strength < 2):
+			if strength:
+				raise SyntaxError("Expected ')'")
+			else:
+				return interpret(equation, strength + 2, None)
+		return interpret(equation, strength + 1, None)
+	except SyntaxError as msg:
+		print("Syntax Error: " + str(msg))
+		return
+
+def ui():
+	while True:
+		equation = input()
+		print(interpret(equation))
+		input("Press Enter to Continue")
+		os.system('cls')
+
+ui()
