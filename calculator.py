@@ -65,11 +65,7 @@ def operate(equation, index, strength):
 						nums_indices.append(i - len(digits[count]))
 						nums_indices.append(0)
 				
-				print('opI ' + str(count))
-				print('I ' + str(i))
-				print('operator ' + operator)
-				print('duo? ' + str(duo_operator))
-				print(digits)
+
 
 				nums_indices.append(i)
 				if duo_operator:
@@ -81,9 +77,7 @@ def operate(equation, index, strength):
 						values = [0, int(digits[count])]
 				if operator == '+':
 					result = values[0] + values[1]
-				if operator == '-':
-					print('operating minus')
-					
+				if operator == '-':					
 					if i:
 						result = values[0] - values[1]
 					else:
@@ -113,9 +107,7 @@ def operate(equation, index, strength):
 			equation = equation[0:nums_indices[2] - 1] + str(result) + equation[nums_indices[1]:len(equation)]
 		else:
 			equation += END_VALUE
-	print('res ' + str(result))
-	print(equation)
-	print('=======')
+
 	return equation
 
 def interpret(equation,strength=0, last_index = None):
@@ -131,7 +123,7 @@ def interpret(equation,strength=0, last_index = None):
 			return int(equation[:-1])
 			
 		
-		print('strength ' + str(strength))
+
 		# index of current operator in equation
 		index = equation.index(operators[strength])
 		
@@ -145,16 +137,11 @@ def interpret(equation,strength=0, last_index = None):
 			# if closing bracket
 			if strength:
 				# closing bracket calculate brackets and start recursion again
-				print('outside strength ' + str(strength))
 				brackets_str = str(interpret(equation[last_index + 1: index]))
-				print('a')
 				equation = equation[0:last_index] + brackets_str + equation[index: len(equation) - 1]
-				print('done brackets')
-				print('t equation ' + equation)
 				return interpret(equation, 0, None)
 		# normal operation
 		else:
-			print('b operator is ' + str(operators[strength]))
 			equation = operate(equation,index,strength)
 			return interpret(equation, strength, last_index)
 	
