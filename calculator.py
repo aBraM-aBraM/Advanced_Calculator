@@ -120,7 +120,7 @@ def interpret(equation,strength=0, last_index = None):
 			return int(equation)
 		
 		if END_VALUE in equation:
-			return int(equation[:-1])
+			return int(equation[:-len(END_VALUE)])
 			
 		
 
